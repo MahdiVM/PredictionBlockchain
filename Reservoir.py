@@ -1,7 +1,5 @@
 import csv
-import datetime
 import time
-
 import requests
 import json
 
@@ -10,16 +8,11 @@ url = "https://api.reservoir.tools/collections/v7"
 token = "eadfb758-7639-51a3-8c9e-58a3af40cfbe"
 collection_specification = []
 daily_collection_volume = []
-
-headers = {
-    "accept": "*/*",
-    "x-api-key": token
-}
+headers = {"accept": "*/*", "x-api-key": token}
 
 response = requests.get(url, headers=headers)
-print(response.text)
 result = json.loads(response.text)['collections']
-
+print(f"Collection Count :  {len(result)}")
 
 for item in result:
     record = dict(
@@ -32,26 +25,22 @@ for item in result:
     collection_specification.append(record)
 
 for item in collection_specification:
-    url = f"https://api.reservoir.tools/collections/daily-volumes/v1?id={item['ID']}&limit=1000"
 
-    headers = {
-        "accept": "*/*",
-        "x-api-key": token
-    }
-
+    url = f"https://api.reservoir.tools/collections/daily-volumes/v1?id={item['ID']}&limit=2000"
     response = requests.get(url, headers=headers)
     result = json.loads(response.text)['collections']
     name = item['Name']
-    with open(f'{name}.csv', 'w', newline='') as file:
+    print(f"Create Filename (CSV) : {item['Name']} \n \t Row Count By Price and Volume : {len(result)} \n -------------")
+    with open(f'Data/{name}.csv', 'w', newline='') as file:
         writer = csv.writer(file)
         field = ["Date", "Price", "Volume"]
         writer.writerow(field)
-
         for volume in result:
             struct_time = time.localtime(int(volume['timestamp']))
-            date = time.strftime("%Y-%m-%d %H:%M:%S", struct_time)
+            date = time.strftime("%Y-%m-%d", struct_time)
             writer.writerow([date, volume['floor_sell_value'], volume['volume']])
 
+print('End Gathering')
 # record = dict(
 #     DateTime=date,
 #     Volume=volume['volume'],
@@ -59,18 +48,3 @@ for item in collection_specification:
 #     SalesCount=volume['sales_count']
 # )
 # daily_collection_volume.append(record)
-
-
-
-
-
-# url = "https://api.reservoir.tools/collections/daily-volumes/v1?id=0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d&limit=1000"
-#
-# headers = {
-#     "accept": "*/*",
-#     "x-api-key": "eadfb758-7639-51a3-8c9e-58a3af40cfbe"
-# }
-#
-# response = requests.get(url, headers=headers)
-#
-# print(response.text)
